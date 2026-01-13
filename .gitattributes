@@ -1,0 +1,7 @@
+# Definir finais de linha para arquivos de texto
+* text=auto
+
+# Forçar finais de linha LF para arquivos específicos (opcional)
+*.sh text eol=lf
+*.js text eol=lf
+*.ts text eol=lf
