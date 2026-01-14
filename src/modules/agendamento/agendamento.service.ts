@@ -1,13 +1,16 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Agendamento } from './agendamento.entity';
 import { CriarAgendamentoDto } from './dto/criar-agendamento.dto';
 import { Servico } from '../servico/servico.entity';
 import { ConfiguracaoAgenda } from '../profissional/configuracao-agenda.entity';
+import { WhatsappService } from '../whatsapp/whatsapp.service';
 
 @Injectable()
 export class AgendamentoService {
+  private readonly logger = new Logger(AgendamentoService.name);
+
   constructor(
     @InjectRepository(Agendamento)
     private readonly agendamentoRepo: Repository<Agendamento>,
@@ -17,6 +20,8 @@ export class AgendamentoService {
 
     @InjectRepository(ConfiguracaoAgenda)
     private readonly configRepo: Repository<ConfiguracaoAgenda>,
+
+    private readonly whatsappService: WhatsappService,
   ) {}
 
   // Helper: formata hora UTC de um Date para "HH:mm:ss"
@@ -114,7 +119,36 @@ export class AgendamentoService {
       status: 'pendente',
     });
 
-    return this.agendamentoRepo.save(ag);
+    const saved = await this.agendamentoRepo.save(ag);
+
+    // Recarregar com relations para obter nome/whatsapp
+    const savedWithRelations = await this.agendamentoRepo.findOne({
+      where: { id: saved.id },
+      relations: ['cliente', 'profissional', 'servico'],
+    });
+
+    // Disparo assíncrono da confirmação WhatsApp (não bloqueia/agendamento já persistido)
+    if (savedWithRelations?.cliente?.whatsapp) {
+      // fire-and-forget, log any error
+      this.whatsappService
+        .enviarConfirmacao(
+          savedWithRelations.cliente.whatsapp,
+          savedWithRelations.cliente.nome,
+          savedWithRelations.profissional?.nome ?? 'Profissional',
+          savedWithRelations.servico?.nome ?? 'Serviço',
+          savedWithRelations.data_inicio,
+        )
+        .then(() => {
+          this.logger.log(`[WhatsApp] Confirmacao enviada para ${savedWithRelations.cliente.whatsapp}`);
+        })
+        .catch((err) => {
+          this.logger.error(`[WhatsApp] Erro ao enviar confirmacao para ${savedWithRelations.cliente.whatsapp}`, err);
+        });
+    } else {
+      this.logger.warn(`[WhatsApp] Cliente sem número WhatsApp para agendamento ${saved.id}`);
+    }
+
+    return saved;
   }
 
   // Listar agenda do profissional por data (opcional)
@@ -135,5 +169,31 @@ export class AgendamentoService {
     qb.orderBy('a.data_inicio', 'ASC');
 
     return qb.getMany();
+  }
+
+  // Envia lembrete manual para um agendamento existente
+  async enviarLembrete(agendamentoId: string): Promise<void> {
+    const ag = await this.agendamentoRepo.findOne({
+      where: { id: agendamentoId },
+      relations: ['cliente', 'profissional', 'servico'],
+    });
+    if (!ag) throw new NotFoundException('Agendamento não encontrado');
+
+    if (!ag.cliente?.whatsapp) {
+      this.logger.warn(`[WhatsApp] Não há número WhatsApp para o cliente do agendamento ${ag.id}`);
+      return;
+    }
+
+    const horaFormatada = ag.data_inicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    // Fire-and-forget
+    this.whatsappService
+      .enviarLembrete(ag.cliente.whatsapp, ag.cliente.nome, horaFormatada)
+      .then(() => {
+        this.logger.log(`[WhatsApp] Lembrete enviado para ${ag.cliente.whatsapp} (ag: ${ag.id})`);
+      })
+      .catch((err) => {
+        this.logger.error(`[WhatsApp] Erro ao enviar lembrete para ${ag.cliente.whatsapp} (ag: ${ag.id})`, err);
+      });
   }
 }

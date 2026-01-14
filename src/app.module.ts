@@ -13,9 +13,11 @@ import { Cliente } from './modules/cliente/cliente.entity';
 import { Servico } from './modules/servico/servico.entity';
 import { Agendamento } from './modules/agendamento/agendamento.entity';
 import { ConfiguracaoAgenda } from './modules/profissional/configuracao-agenda.entity';
-import {ProfissionalModule } from "./modules/profissional/profissional.module";
+
+import { ProfissionalModule } from './modules/profissional/profissional.module';
 import { AgendamentoModule } from './modules/agendamento/agendamento.module';
 import { ClienteModule } from './modules/cliente/cliente.module';
+import { WhatsappModule } from './modules/whatsapp/whatsapp.module';  // Importar o módulo
 
 @Module({
   imports: [
@@ -47,7 +49,7 @@ import { ClienteModule } from './modules/cliente/cliente.module';
     ProfissionalModule,
     AgendamentoModule,
     ClienteModule,
-    // Outros módulos podem ser adicionados aqui
+    WhatsappModule,  // Registrar o módulo aqui
   ],
 })
 export class AppModule {}

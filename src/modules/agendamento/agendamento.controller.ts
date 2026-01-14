@@ -1,4 +1,4 @@
-import { Controller, Post, UseGuards, Body, Request, Get, Query } from '@nestjs/common';
+import { Controller, Post, UseGuards, Body, Request, Get, Query, Param } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AgendamentoService } from './agendamento.service';
 import { CriarAgendamentoDto } from './dto/criar-agendamento.dto';
@@ -18,5 +18,12 @@ export class AgendamentoController {
   async minhaAgenda(@Request() req, @Query('data') date?: string) {
     const profissionalId = req.user.id;
     return this.agendamentoService.listarMinhaAgenda(profissionalId, date);
+  }
+
+  // Endpoint para enviar lembrete manual via WhatsApp
+  @Post(':id/lembrete')
+  async enviarLembrete(@Param('id') id: string) {
+    await this.agendamentoService.enviarLembrete(id);
+    return { message: 'Lembrete enviado com sucesso (simulado via log).' };
   }
 }
