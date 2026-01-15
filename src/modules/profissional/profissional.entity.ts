@@ -19,7 +19,7 @@ export class Profissional {
   @Column({ length: 255 })
   email: string;
 
-  @Column({ name: 'senha_hash', length: 255 })
+  @Column({ name: 'senha_hash', length: 255, select: false })
   senhaHash: string;
 
   @Column({ length: 50, nullable: true })
