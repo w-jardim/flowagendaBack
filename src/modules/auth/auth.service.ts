@@ -24,7 +24,6 @@ export class AuthService {
    * Registra um novo profissional
    */
   async registrar(dto: RegistroDto): Promise<{ access_token: string }> {
-    // 1. Verifica se o e-mail já está em uso
     const existe = await this.profissionalRepo.findOne({
       where: { email: dto.email },
     });
@@ -33,19 +32,16 @@ export class AuthService {
       throw new ConflictException('Este e-mail já está cadastrado no FlowAgenda');
     }
 
-    // 2. Transforma a senha em Hash (Segurança Máxima)
     const saltRounds = 10;
     const senhaHash = await bcrypt.hash(dto.senha, saltRounds);
 
-    // 3. Salva o profissional
     const profissional = this.profissionalRepo.create({
       ...dto,
-      senha_hash: senhaHash,
+      senhaHash: senhaHash,
     });
 
     await this.profissionalRepo.save(profissional);
 
-    // 4. Já retorna o token para o usuário logar automaticamente após o cadastro
     return this.gerarToken(profissional);
   }
 
@@ -53,13 +49,28 @@ export class AuthService {
    * Valida credenciais e realiza login
    */
   async login(dto: LoginDto): Promise<{ access_token: string }> {
-    const profissional = await this.profissionalRepo.findOne({
-      where: { email: dto.email },
-    });
+    // Usamos QueryBuilder para garantir que o campo senha_hash seja selecionado
+    // mesmo que esteja com "select: false" na entidade.
+    const profissional = await this.profissionalRepo
+      .createQueryBuilder('profissional')
+      .addSelect('profissional.senha_hash')
+      .where('profissional.email = :email', { email: dto.email })
+      .getOne();
 
-    // Verifica se profissional existe e se a senha é válida
-    if (!profissional || !(await bcrypt.compare(dto.senha, profissional.senha_hash))) {
+    if (!profissional) {
       throw new UnauthorizedException('E-mail ou senha incorretos');
+    }
+
+    try {
+      // Verifica se a senha é válida
+      const senhaValida = await bcrypt.compare(dto.senha, profissional.senhaHash);
+      
+      if (!senhaValida) {
+        throw new UnauthorizedException('E-mail ou senha incorretos');
+      }
+    } catch (error) {
+      // Se o bcrypt falhar por falta de argumentos, tratamos como erro de login
+      throw new UnauthorizedException('Erro ao validar credenciais');
     }
 
     return this.gerarToken(profissional);
@@ -80,7 +91,7 @@ export class AuthService {
   }
 
   /**
-   * Busca perfil do profissional logado (usado na rota /perfil)
+   * Busca perfil do profissional logado
    */
   async obterPerfil(profissionalId: string): Promise<Partial<Profissional>> {
     const profissional = await this.profissionalRepo.findOne({
@@ -91,8 +102,7 @@ export class AuthService {
       throw new UnauthorizedException('Profissional não encontrado');
     }
 
-    // Removemos a senha_hash do retorno por segurança
-    const { senha_hash, ...resultado } = profissional;
+    const { senhaHash, ...resultado } = profissional;
     return resultado;
   }
 }

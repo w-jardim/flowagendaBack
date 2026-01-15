@@ -12,12 +12,8 @@ import { Profissional } from '../profissional/profissional.entity';
 import { Cliente } from '../cliente/cliente.entity';
 import { Servico } from '../servico/servico.entity';
 
-/**
- * Entity que representa um agendamento
- * Controla horários e evita conflitos
- */
 @Entity('agendamentos')
-@Index(['profissional_id', 'data_inicio']) // Índice para buscas rápidas de agenda
+@Index(['profissional_id', 'data_inicio'])
 export class Agendamento {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -31,20 +27,25 @@ export class Agendamento {
   @Column({ type: 'uuid', nullable: true })
   servico_id: string;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'timestamptz' }) // Com fuso horário para evitar erros
   data_inicio: Date;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'timestamptz' })
   data_fim: Date;
 
-  @Column({
-    type: 'varchar',
-    length: 50,
-    default: 'confirmado',
-  })
+  @Column({ type: 'varchar', length: 50, default: 'confirmado' })
   status: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => (value ? parseFloat(value) : null),
+    },
+  })
   valor: number;
 
   @Column({ type: 'text', nullable: true })
@@ -56,7 +57,6 @@ export class Agendamento {
   @UpdateDateColumn({ type: 'timestamp' })
   atualizado_em: Date;
 
-  // Relacionamentos Reais
   @ManyToOne(() => Profissional, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'profissional_id' })
   profissional: Profissional;

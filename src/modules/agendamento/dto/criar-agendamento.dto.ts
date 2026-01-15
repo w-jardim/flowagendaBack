@@ -1,19 +1,21 @@
-import { IsNotEmpty, IsUUID, IsISO8601, IsOptional, IsString } from 'class-validator';
+import { IsUUID, IsDateString, IsOptional, IsString, IsNumber } from 'class-validator';
 
 export class CriarAgendamentoDto {
-  @IsNotEmpty()
-  @IsUUID()
-  servico_id: string;
-
-  @IsNotEmpty()
   @IsUUID()
   cliente_id: string;
 
-  @IsNotEmpty()
-  @IsISO8601()
-  data_inicio: string; // Ex: "2026-01-20T14:00:00Z"
-
+  @IsUUID()
   @IsOptional()
+  servico_id?: string;
+
+  @IsDateString()
+  data_inicio: string;
+
+  @IsNumber()
+  @IsOptional()
+  valor?: number;
+
   @IsString()
+  @IsOptional()
   observacoes?: string;
 }
