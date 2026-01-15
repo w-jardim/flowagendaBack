@@ -61,6 +61,7 @@ export class AuthService {
     console.log('Profissional encontrado:', profissional ? 'Sim' : 'Não');
     if (profissional) {
       console.log('Hash do banco (prefixo):', profissional.senhaHash ? profissional.senhaHash.slice(0, 10) + '...' : 'null');
+      console.log('Tentando comparar senha...');
       const match = await bcrypt.compare(dto.senha, profissional.senhaHash);
       console.log('Senha confere:', match);
     }
@@ -69,6 +70,7 @@ export class AuthService {
       throw new UnauthorizedException('E-mail ou senha incorretos');
     }
 
+    console.log('Chegou ao try-catch do bcrypt');
     try {
       // Verifica se a senha é válida
       const senhaValida = await bcrypt.compare(dto.senha, profissional.senhaHash);
@@ -77,6 +79,7 @@ export class AuthService {
         throw new UnauthorizedException('E-mail ou senha incorretos');
       }
     } catch (error) {
+      console.log('Erro no bcrypt:', error.message);
       // Se o bcrypt falhar por falta de argumentos, tratamos como erro de login
       throw new UnauthorizedException('Erro ao validar credenciais');
     }
