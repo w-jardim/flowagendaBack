@@ -49,13 +49,21 @@ export class AuthService {
    * Valida credenciais e realiza login
    */
   async login(dto: LoginDto): Promise<{ access_token: string }> {
-    // Usamos QueryBuilder para garantir que o campo senha_hash seja selecionado
-    // mesmo que esteja com "select: false" na entidade.
+    // Usamos QueryBuilder para garantir que o campo senhaHash seja selecionado
+    // mesmo que o campo tenha select: false na entidade.
     const profissional = await this.profissionalRepo
-      .createQueryBuilder('profissional')
-      .addSelect('profissional.senha_hash')
-      .where('profissional.email = :email', { email: dto.email })
+      .createQueryBuilder('p')
+      .addSelect('p.senha_hash') // garante que o hash seja carregado
+      .where('p.email = :email', { email: dto.email })
       .getOne();
+
+    // DEBUG: Logs temporários para diagnóstico
+    console.log('Profissional encontrado:', profissional ? 'Sim' : 'Não');
+    if (profissional) {
+      console.log('Hash do banco (prefixo):', profissional.senhaHash ? profissional.senhaHash.slice(0, 10) + '...' : 'null');
+      const match = await bcrypt.compare(dto.senha, profissional.senhaHash);
+      console.log('Senha confere:', match);
+    }
 
     if (!profissional) {
       throw new UnauthorizedException('E-mail ou senha incorretos');
