@@ -49,6 +49,8 @@ export class AuthService {
    * Valida credenciais e realiza login
    */
   async login(dto: LoginDto): Promise<{ access_token: string }> {
+    console.log('DEBUG: Método login chamado com email:', dto.email);
+
     // Usamos QueryBuilder para garantir que o campo senhaHash seja selecionado
     // mesmo que o campo tenha select: false na entidade.
     const profissional = await this.profissionalRepo
