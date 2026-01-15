@@ -51,13 +51,11 @@ export class AuthService {
   async login(dto: LoginDto): Promise<{ access_token: string }> {
     console.log('DEBUG: Método login chamado com email:', dto.email);
 
-    // Usamos QueryBuilder para garantir que o campo senhaHash seja selecionado
-    // mesmo que o campo tenha select: false na entidade.
-    const profissional = await this.profissionalRepo
-      .createQueryBuilder('p')
-      .addSelect('p.senha_hash') // garante que o hash seja carregado
-      .where('p.email = :email', { email: dto.email })
-      .getOne();
+    // Busca o profissional incluindo o campo senhaHash
+    const profissional = await this.profissionalRepo.findOne({
+      where: { email: dto.email },
+      select: ['id', 'email', 'nome', 'senhaHash', 'tipo', 'whatsapp', 'criado_em', 'atualizado_em'], // Inclui senhaHash explicitamente
+    });
 
     // DEBUG: Logs temporários para diagnóstico
     console.log('Profissional encontrado:', profissional ? 'Sim' : 'Não');
