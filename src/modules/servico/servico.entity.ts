@@ -30,7 +30,16 @@ export class Servico {
   @Column({ type: 'int', default: 0 })
   intervalo_minutos: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => (value ? parseFloat(value) : null),
+    },
+  })
   preco: number;
 
   @Column({ type: 'boolean', default: true })

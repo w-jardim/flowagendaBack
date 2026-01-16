@@ -18,6 +18,10 @@ import { ProfissionalModule } from './modules/profissional/profissional.module';
 import { AgendamentoModule } from './modules/agendamento/agendamento.module';
 import { ClienteModule } from './modules/cliente/cliente.module';
 import { WhatsappModule } from './modules/whatsapp/whatsapp.module';  // Importar o módulo
+import { AiModule } from './modules/ai/ai.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -50,6 +54,10 @@ import { WhatsappModule } from './modules/whatsapp/whatsapp.module';  // Importa
     AgendamentoModule,
     ClienteModule,
     WhatsappModule,  // Registrar o módulo aqui
+    AiModule,
+    AdminModule,
   ],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

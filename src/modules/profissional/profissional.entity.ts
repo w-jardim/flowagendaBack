@@ -28,6 +28,20 @@ export class Profissional {
   @Column({ length: 20, nullable: true })
   whatsapp?: string;
 
+  @Column({
+    type: 'varchar',
+    length: 20,
+    default: 'PROFISSIONAL',
+  })
+  role: 'ADMIN' | 'PROFISSIONAL';
+
+  @Column({
+    type: 'varchar',
+    length: 20,
+    default: 'ACTIVE',
+  })
+  status: 'ACTIVE' | 'BLOCKED';
+
   @CreateDateColumn({ type: 'timestamp', default: () => 'now()' })
   criado_em: Date;
 

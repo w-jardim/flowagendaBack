@@ -1,14 +1,16 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-/**
- * DTO para login de profissional
- */
 export class LoginDto {
-  @IsNotEmpty({ message: 'Email é obrigatório' })
-  @IsEmail({}, { message: 'Email inválido' })
+  @IsEmail()
   email: string;
 
-  @IsNotEmpty({ message: 'Senha é obrigatória' })
   @IsString()
-  senha: string;
+  @IsNotEmpty()
+  @IsOptional()
+  senha?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  password?: string;
 }

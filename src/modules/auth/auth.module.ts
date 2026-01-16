@@ -7,6 +7,8 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { Profissional } from '../profissional/profissional.entity';
+import { RolesGuard } from './guards/roles.guard';
+import { Reflector } from '@nestjs/core';
 import type { SignOptions } from 'jsonwebtoken';
 
 @Module({
@@ -33,7 +35,7 @@ import type { SignOptions } from 'jsonwebtoken';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
-  exports: [JwtStrategy, PassportModule],
+  providers: [AuthService, JwtStrategy, RolesGuard, Reflector],
+  exports: [JwtStrategy, PassportModule, RolesGuard],
 })
 export class AuthModule {}

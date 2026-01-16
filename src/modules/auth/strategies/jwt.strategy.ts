@@ -35,12 +35,20 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload): Promise<Profissional> {
-    const profissional = await this.profissionalRepo.findOne({
-      where: { id: payload.sub },
-    });
+    // Buscar explicitamente campos essenciais (role, status)
+    const profissional = await this.profissionalRepo
+      .createQueryBuilder('p')
+      .select(['p.id', 'p.email', 'p.nome', 'p.role', 'p.status'])
+      .where('p.id = :id', { id: payload.sub })
+      .getOne();
 
     if (!profissional) {
       throw new UnauthorizedException('Profissional não encontrado ou acesso revogado');
+    }
+
+    // Bloquear profissionais com status BLOCKED
+    if ((profissional as any).status === 'BLOCKED') {
+      throw new UnauthorizedException('Conta bloqueada');
     }
 
     return profissional;

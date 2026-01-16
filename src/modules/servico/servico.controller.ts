@@ -10,13 +10,25 @@ export class ServicoController {
 
   @Post()
   async criar(@Request() req, @Body() dto: ServicoDto) {
-    const profissionalId = req.user.id;
+    // DEBUG logs - REMOVER APÓS TESTE
+    console.log('DEBUG: ServicoController.criar chamado'); // REMOVER APÓS TESTE
+    console.log('DEBUG: req.user:', req.user); // REMOVER APÓS TESTE
+
+    const profissionalId = req.user?.id;
+    console.log('DEBUG: profissionalId extraído:', profissionalId); // REMOVER APÓS TESTE
+
     return this.servicoService.criar(profissionalId, dto);
   }
 
   @Get()
   async listar(@Request() req) {
-    const profissionalId = req.user.id;
+    // DEBUG logs - REMOVER APÓS TESTE
+    console.log('DEBUG: ServicoController.listar chamado'); // REMOVER APÓS TESTE
+    console.log('DEBUG: req.user:', req.user); // REMOVER APÓS TESTE
+
+    const profissionalId = req.user?.id;
+    console.log('DEBUG: profissionalId extraído (listar):', profissionalId); // REMOVER APÓS TESTE
+
     return this.servicoService.listarPorProfissional(profissionalId);
   }
 
@@ -26,13 +38,21 @@ export class ServicoController {
     @Request() req,
     @Body() dto: Partial<ServicoDto>,
   ) {
-    const profissionalId = req.user.id;
+    // DEBUG logs - REMOVER APÓS TESTE
+    console.log('DEBUG: ServicoController.atualizar chamado para id:', id); // REMOVER APÓS TESTE
+    console.log('DEBUG: req.user:', req.user); // REMOVER APÓS TESTE
+
+    const profissionalId = req.user?.id;
     return this.servicoService.atualizar(id, profissionalId, dto);
   }
 
   @Delete(':id')
   async remover(@Param('id', new ParseUUIDPipe()) id: string, @Request() req) {
-    const profissionalId = req.user.id;
+    // DEBUG logs - REMOVER APÓS TESTE
+    console.log('DEBUG: ServicoController.remover chamado para id:', id); // REMOVER APÓS TESTE
+    console.log('DEBUG: req.user:', req.user); // REMOVER APÓS TESTE
+
+    const profissionalId = req.user?.id;
     await this.servicoService.remover(id, profissionalId);
     return { message: 'Serviço desativado com sucesso' };
   }

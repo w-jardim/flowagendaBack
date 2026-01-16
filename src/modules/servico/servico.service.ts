@@ -12,6 +12,12 @@ export class ServicoService {
   ) {}
 
   async criar(profissionalId: string, dto: ServicoDto): Promise<Servico> {
+    // --- INÍCIO DOS LOGS DE DIAGNÓSTICO (REMOVER APÓS TESTE) ---
+    console.log('--- DIAGNÓSTICO: CRIANDO SERVIÇO ---');
+    console.log('ID do Profissional vindo do Token:', profissionalId);
+    console.log('Dados do DTO recebidos:', JSON.stringify(dto, null, 2));
+    // --- FIM DOS LOGS DE DIAGNÓSTICO ---
+
     // Mapear explicitamente os campos do DTO para a entidade
     const mapped: DeepPartial<Servico> = {
       nome: dto.nome,
@@ -32,10 +38,11 @@ export class ServicoService {
     const novoServico = this.servicoRepo.create(mapped);
 
     try {
-      // cast any para contornar diferenças de tipagem entre DeepPartial e entidade completa
-      return await this.servicoRepo.save(novoServico as any);
+      const salvo = await this.servicoRepo.save(novoServico as any);
+      console.log('SUCESSO: Serviço salvo no banco com ID:', salvo.id); // REMOVER APÓS TESTE
+      return salvo;
     } catch (err) {
-      console.error('Erro criando serviço:', err);
+      console.error('ERRO CRÍTICO NO BANCO AO SALVAR SERVIÇO:', err); // REMOVER APÓS TESTE
       throw new InternalServerErrorException('Erro interno ao criar serviço');
     }
   }
@@ -50,7 +57,6 @@ export class ServicoService {
   async atualizar(id: string, profissionalId: string, dto: Partial<ServicoDto>): Promise<Servico> {
     const servico = await this.buscarEValidarDono(id, profissionalId);
 
-    // usa (dto as any) para evitar erros de TS e para aceitar ambos os nomes de campo
     const body: any = dto as any;
 
     if (body.nome !== undefined) servico.nome = body.nome;

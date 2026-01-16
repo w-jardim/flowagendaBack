@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsNumber, Min, IsOptional, IsBoolean } from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber, Min, IsOptional, IsBoolean, IsUUID } from 'class-validator';
 
 export class ServicoDto {
   @IsNotEmpty()
@@ -22,4 +22,8 @@ export class ServicoDto {
   @IsOptional()
   @IsBoolean()
   ativo?: boolean;
+
+  @IsNotEmpty()
+  @IsUUID()
+  profissional_id: string;  // Adicionado para receber o ID do profissional
 }

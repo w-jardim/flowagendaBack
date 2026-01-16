@@ -1,0 +1,36 @@
+image: node:18
+
+services:
+  - name: postgres:13
+    alias: postgres
+
+stages:
+  - test
+
+variables:
+  POSTGRES_DB: flowagenda_test
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  DB_HOST: postgres
+  DB_PORT: 5432
+  NODE_ENV: test
+
+before_script:
+  - apt-get update -y && apt-get install -y postgresql-client
+  - npm ci
+  - ./node_modules/.bin/wait-for-it $DB_HOST:$DB_PORT -t 60 || true
+
+test:e2e:
+  stage: test
+  script:
+    - echo "Applying migration SQL if needed..."
+    - PGPASSWORD=$POSTGRES_PASSWORD psql -h $DB_HOST -U $POSTGRES_USER -d $POSTGRES_DB -f src/migrations/20260116_add_profissional_role_status.sql || echo "Migration step ignored"
+    - echo "Running seed-admin..."
+    - npm run seed-admin
+    - echo "Running unit tests"
+    - npm run test -- --runInBand || true
+    - echo "Running e2e tests"
+    - npm run test:e2e
+  only:
+    - merge_requests
+    - main

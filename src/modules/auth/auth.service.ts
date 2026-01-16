@@ -2,6 +2,7 @@ import {
   Injectable,
   ConflictException,
   UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -10,10 +11,11 @@ import * as bcrypt from 'bcrypt';
 import { Profissional } from '../profissional/profissional.entity';
 import { RegistroDto } from './dto/registro.dto';
 import { LoginDto } from './dto/login.dto';
-import { JwtPayload } from './strategies/jwt.strategy';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     @InjectRepository(Profissional)
     private profissionalRepo: Repository<Profissional>,
@@ -49,53 +51,88 @@ export class AuthService {
    * Valida credenciais e realiza login
    */
   async login(dto: LoginDto): Promise<{ access_token: string }> {
-    console.log('DEBUG: Método login chamado com email:', dto.email);
+    const startLogin = Date.now();
+    this.logger.log(`[AUTH] ========== INICIANDO LOGIN ==========`);
+    this.logger.log(`[AUTH] Email recebido: ${dto.email}`);
 
-    // Usamos QueryBuilder para garantir que o campo senhaHash seja selecionado
-    // mesmo que o campo tenha select: false na entidade.
+    // Normaliza o campo de senha: aceita tanto "senha" quanto "password"
+    const senhaRecebida: string | undefined = dto.senha ?? dto.password;
+    this.logger.log(`[AUTH] Senha recebida: ${senhaRecebida ? 'Sim' : 'NÃO'}`);
+
+    // Busca explícita do campo de hash (porque na entity está select: false)
+    const startDb = Date.now();
+    this.logger.log(`[AUTH] Iniciando busca no banco de dados...`);
+    
     const profissional = await this.profissionalRepo
       .createQueryBuilder('p')
-      .addSelect('p.senha_hash')
+      .addSelect('p.senhaHash')
       .where('p.email = :email', { email: dto.email })
       .getOne();
 
-    // DEBUG: Logs temporários para diagnóstico
-    console.log('Profissional encontrado:', profissional ? 'Sim' : 'Não');
-    if (profissional) {
-      console.log('Hash do banco (prefixo):', profissional.senhaHash ? profissional.senhaHash.slice(0, 10) + '...' : 'null');
-      console.log('Tentando comparar senha...');
-      const match = await bcrypt.compare(dto.senha, profissional.senhaHash);
-      console.log('Senha confere:', match);
-    }
+    const dbTime = Date.now() - startDb;
+    this.logger.log(`[AUTH] Busca DB levou ${dbTime}ms`);
+    this.logger.log(`[AUTH] Profissional encontrado: ${profissional ? 'SIM' : 'NÃO'}`);
 
     if (!profissional) {
+      this.logger.warn(`[AUTH] ❌ Usuário não encontrado para email: ${dto.email}`);
       throw new UnauthorizedException('E-mail ou senha incorretos');
     }
 
-    console.log('Chegou ao try-catch do bcrypt');
-    try {
-      // Verifica se a senha é válida
-      const senhaValida = await bcrypt.compare(dto.senha, profissional.senhaHash);
-      
-      if (!senhaValida) {
-        throw new UnauthorizedException('E-mail ou senha incorretos');
-      }
-    } catch (error) {
-      console.log('Erro no bcrypt:', error.message);
-      // Se o bcrypt falhar por falta de argumentos, tratamos como erro de login
-      throw new UnauthorizedException('Erro ao validar credenciais');
+    // Bloqueio de login para contas com status BLOCKED
+    if ((profissional as any).status === 'BLOCKED') {
+      this.logger.warn(`[AUTH] ❌ Conta bloqueada para email: ${dto.email}`);
+      throw new UnauthorizedException('Conta bloqueada');
     }
 
-    return this.gerarToken(profissional);
+    if (!senhaRecebida) {
+      this.logger.warn(`[AUTH] ❌ Senha não fornecida`);
+      throw new UnauthorizedException('E-mail ou senha incorretos');
+    }
+
+    try {
+      this.logger.log(`[AUTH] Hash no banco: ${profissional.senhaHash?.substring(0, 20)}...`);
+      
+      const startCompare = Date.now();
+      this.logger.log(`[AUTH] Iniciando bcrypt.compare...`);
+      
+      const senhaValida = await bcrypt.compare(senhaRecebida, profissional.senhaHash);
+      
+      const compareTime = Date.now() - startCompare;
+      this.logger.log(`[AUTH] bcrypt.compare levou ${compareTime}ms - Resultado: ${senhaValida ? 'VÁLIDA' : 'INVÁLIDA'}`);
+
+      if (!senhaValida) {
+        this.logger.warn(`[AUTH] ❌ Senha inválida para email: ${dto.email}`);
+        throw new UnauthorizedException('E-mail ou senha incorretos');
+      }
+
+      const startJwt = Date.now();
+      this.logger.log(`[AUTH] Gerando JWT token...`);
+      
+      const result = this.gerarToken(profissional);
+      
+      const jwtTime = Date.now() - startJwt;
+      const totalTime = Date.now() - startLogin;
+      
+      this.logger.log(`[AUTH] JWT gerado em ${jwtTime}ms`);
+      this.logger.log(`[AUTH] ✅ LOGIN BEM-SUCEDIDO - Tempo total: ${totalTime}ms`);
+      this.logger.log(`[AUTH] ========== FIM LOGIN ==========`);
+
+      return result;
+    } catch (err) {
+      const totalTime = Date.now() - startLogin;
+      this.logger.error(`[AUTH] ❌ ERRO NA VALIDAÇÃO (${totalTime}ms): ${err.message}`, err.stack);
+      throw new UnauthorizedException('E-mail ou senha incorretos');
+    }
   }
 
   /**
    * Gera o token assinado
    */
   private gerarToken(profissional: Profissional): { access_token: string } {
-    const payload: JwtPayload = {
+    const payload = {
       sub: profissional.id,
       email: profissional.email,
+      role: (profissional as any).role ?? 'PROFISSIONAL',
     };
 
     return {

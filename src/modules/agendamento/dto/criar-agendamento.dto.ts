@@ -1,4 +1,4 @@
-import { IsUUID, IsDateString, IsOptional, IsString, IsNumber } from 'class-validator';
+import { IsUUID, IsDateString, IsOptional, IsString, IsNumber, IsIn } from 'class-validator';
 
 export class CriarAgendamentoDto {
   @IsUUID()
@@ -18,4 +18,14 @@ export class CriarAgendamentoDto {
   @IsString()
   @IsOptional()
   observacoes?: string;
+
+  // Campos opcionais que o frontend às vezes envia; aceitamos e ignoramos se presentes
+  @IsOptional()
+  @IsString()
+  cliente_nome?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['confirmado', 'pendente', 'cancelado'])
+  status?: string;
 }

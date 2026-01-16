@@ -7,13 +7,25 @@ import { AppModule } from './../src/app.module';
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();
+  });
+
+  afterAll(async () => {
+    try {
+      const ds = app.get('DataSource');
+      if (ds && ds.isInitialized) {
+        await ds.destroy();
+      }
+    } catch (err) {
+      // ignore
+    }
+    await app.close();
   });
 
   it('/ (GET)', () => {

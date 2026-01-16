@@ -96,3 +96,16 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+## Admin seed
+
+- Use `src/scripts/seed-admin.ts` to create an administrator user from environment variables.
+- Example (dev):
+
+```bash
+ADMIN_EMAIL=admin@flowagenda.com ADMIN_PASSWORD=admin123 npx ts-node src/scripts/seed-admin.ts
+```
+
+The script falls back to `admin@flowagenda.com` / `admin123` when env vars are not set.
+
+Do not commit real credentials to the repository; prefer local .env files ignored by git.

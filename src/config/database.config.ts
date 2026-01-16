@@ -11,6 +11,7 @@ export const getDatabaseConfig = (
   password: String(configService.get('DB_PASSWORD')), // Forçamos ser string
   database: configService.get<string>('DB_DATABASE'),
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-  synchronize: true,
-  logging: true,
+  // In tests we prefer to run migrations and keep logging quiet
+  synchronize: configService.get<string>('NODE_ENV') === 'test' ? false : (configService.get<boolean>('TYPEORM_SYNCHRONIZE') ?? true),
+  logging: configService.get<string>('NODE_ENV') === 'test' ? false : (configService.get<boolean>('TYPEORM_LOGGING') ?? true),
 });
