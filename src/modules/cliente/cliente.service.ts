@@ -64,6 +64,22 @@ export class ClienteService {
     });
   }
 
+  toPublic(cliente: Cliente) {
+    return {
+      id: cliente.id,
+      nome: cliente.nome,
+      telefone: cliente.whatsapp ?? null,
+      email: cliente.email ?? null,
+      cpf: cliente.cpf ?? null,
+      endereco: cliente.endereco ?? null,
+    };
+  }
+
+  async findAllPublic(profissionalId: string) {
+    const clientes = await this.findAll(profissionalId);
+    return clientes.map((c) => this.toPublic(c));
+  }
+
   async findOne(id: string, profissionalId: string): Promise<Cliente> {
     const cliente = await this.clienteRepo.findOne({
       where: { id, profissional_id: profissionalId },
@@ -81,6 +97,11 @@ export class ClienteService {
     };
     this.logger.log(`[CLIENTE-SERVICE] Cliente retornado: ${JSON.stringify(clienteLog)}`);
     return cliente;
+  }
+
+  async findOnePublic(id: string, profissionalId: string) {
+    const cliente = await this.findOne(id, profissionalId);
+    return this.toPublic(cliente);
   }
 
   async atualizar(id: string, dto: Partial<CriarClienteDto>, profissionalId: string): Promise<Cliente> {

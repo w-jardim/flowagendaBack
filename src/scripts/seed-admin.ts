@@ -4,7 +4,7 @@ import { DataSource } from 'typeorm';
 import { Profissional } from '../modules/profissional/profissional.entity';
 import * as bcrypt from 'bcrypt';
 
-async function seedAdmin() {
+export async function seedAdmin() {
   const dataSource = new DataSource({
     type: 'postgres',
     host: process.env.DB_HOST || 'localhost',
@@ -44,7 +44,9 @@ async function seedAdmin() {
   await dataSource.destroy();
 }
 
-seedAdmin().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+if (require.main === module) {
+  seedAdmin().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

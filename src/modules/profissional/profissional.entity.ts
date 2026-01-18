@@ -28,6 +28,9 @@ export class Profissional {
   @Column({ length: 20, nullable: true })
   whatsapp?: string;
 
+  @Column({ length: 255, nullable: true })
+  ocupacao?: string;
+
   @Column({
     type: 'varchar',
     length: 20,
@@ -41,6 +44,18 @@ export class Profissional {
     default: 'ACTIVE',
   })
   status: 'ACTIVE' | 'BLOCKED';
+
+  @Column({ type: 'timestamp', nullable: true })
+  data_expiracao_assinatura?: Date;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  plano_valor?: number;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  plano_nome?: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  data_proximo_pagamento?: Date;
 
   @CreateDateColumn({ type: 'timestamp', default: () => 'now()' })
   criado_em: Date;

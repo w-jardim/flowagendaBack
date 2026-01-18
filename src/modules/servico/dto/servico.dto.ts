@@ -1,4 +1,5 @@
 import { IsNotEmpty, IsString, IsNumber, Min, IsOptional, IsBoolean, IsUUID } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class ServicoDto {
   @IsNotEmpty()
@@ -8,6 +9,7 @@ export class ServicoDto {
   @IsNotEmpty()
   @IsNumber()
   @Min(1)
+  @Transform(({ obj }) => (obj?.duracao !== undefined ? Number(obj.duracao) : obj?.duracao_minutos))
   duracao_minutos: number;
 
   @IsOptional()

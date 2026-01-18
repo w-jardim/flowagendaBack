@@ -1,4 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import AppDataSource from '../src/data-source';
+import { ensureMetricsSchema } from './helpers/ensure-schema';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from './../src/app.module';
@@ -11,6 +13,8 @@ describe('Admin (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
+    await ensureMetricsSchema();
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -36,6 +40,10 @@ describe('Admin (e2e)', () => {
         status: 'ACTIVE',
       } as any);
       await repo.save(admin);
+    } else if (existing.role !== 'ADMIN') {
+      existing.role = 'ADMIN';
+      existing.status = 'ACTIVE';
+      await repo.save(existing);
     }
   });
 

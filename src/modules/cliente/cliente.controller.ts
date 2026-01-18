@@ -31,14 +31,14 @@ export class ClienteController {
   @UseGuards(JwtAuthGuard)
   async listarTodos(@Request() req) {
     const profissionalId = req.user.id;
-    return this.clienteService.findAll(profissionalId);
+    return this.clienteService.findAllPublic(profissionalId);
   }
 
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   async buscarPorId(@Param('id', new ParseUUIDPipe()) id: string, @Request() req) {
     const profissionalId = req.user.id;
-    return this.clienteService.findOne(id, profissionalId);
+    return this.clienteService.findOnePublic(id, profissionalId);
   }
 
   @Patch(':id')

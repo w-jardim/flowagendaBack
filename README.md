@@ -109,3 +109,30 @@ ADMIN_EMAIL=admin@flowagenda.com ADMIN_PASSWORD=admin123 npx ts-node src/scripts
 The script falls back to `admin@flowagenda.com` / `admin123` when env vars are not set.
 
 Do not commit real credentials to the repository; prefer local .env files ignored by git.
+
+## Servico DTO (duration field)
+
+- Canonical field: `duracao_minutos` (integer, minutes). This is the field stored in the database and used across services.
+- For convenience the API accepts `duracao` as an alias (same value in minutes). The server maps `duracao` → `duracao_minutos` automatically in the DTO.
+
+Example payload for creating a `Servico`:
+
+```json
+{
+  "nome": "Consulta",
+  "duracao_minutos": 60,
+  "preco": 120.00,
+  "profissional_id": "<uuid>"
+}
+```
+
+Or equivalently:
+
+```json
+{
+  "nome": "Consulta",
+  "duracao": 60,
+  "preco": 120.00,
+  "profissional_id": "<uuid>"
+}
+```

@@ -22,6 +22,7 @@ import { AiModule } from './modules/ai/ai.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AdminModule } from './modules/admin/admin.module';
+import { FrontendLogsModule } from './modules/frontend-logs/frontend-logs.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { AdminModule } from './modules/admin/admin.module';
     WhatsappModule,  // Registrar o módulo aqui
     AiModule,
     AdminModule,
+    FrontendLogsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

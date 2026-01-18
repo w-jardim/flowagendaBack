@@ -1,4 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import AppDataSource from '../src/data-source';
+import { ensureMetricsSchema } from './helpers/ensure-schema';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from './../src/app.module';
@@ -10,6 +12,8 @@ describe('Admin security (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
+    await ensureMetricsSchema();
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
